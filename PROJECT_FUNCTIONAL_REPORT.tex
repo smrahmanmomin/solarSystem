@@ -1,0 +1,156 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\title{Solar System Project: Functional Explanation and Criteria Fulfillment}
+\author{Project Documentation}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Project Functional Overview}
+
+This project is a real-time 3D Solar System simulation built with C++ and Modern OpenGL (Core Profile 3.3). The program models the Sun, planets, moons, orbit paths, and helper visuals (axes and grid), then renders them with lighting, textures, and camera interaction.
+
+\subsection{Main Runtime Flow}
+\begin{enumerate}[leftmargin=*]
+    \item Initialize GLFW window, OpenGL context, callbacks, and global render state in \texttt{src/main.cpp}.
+    \item Load shaders, create meshes, load textures, and build scene objects in \texttt{src/solar\_system.cpp}.
+    \item Run frame loop:
+    \begin{itemize}[leftmargin=*]
+        \item Compute \texttt{deltaTime}
+        \item Process input (camera and feature toggles)
+        \item Update simulation state (planet rotation/revolution)
+        \item Render skybox, sun, planets, rings, orbits, axes, and grid
+    \end{itemize}
+    \item Exit and release resources.
+\end{enumerate}
+
+\subsection{Technical Architecture}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Entry and loop}: \texttt{src/main.cpp}
+    \item \textbf{Scene manager}: \texttt{src/solar\_system.cpp}
+    \item \textbf{Planet physics and transforms}: \texttt{src/planet.cpp}
+    \item \textbf{Orbit/axis/grid generation and rendering}: \texttt{src/orbit\_renderer.cpp}
+    \item \textbf{Geometry generation}: \texttt{src/sphere.cpp}, \texttt{src/ring.cpp}
+    \item \textbf{Classic algorithms}: \texttt{src/algorithms/dda.cpp}, \texttt{src/algorithms/bresenham.cpp}, \texttt{src/algorithms/midpoint\_circle.cpp}
+    \item \textbf{Shaders}: \texttt{shaders/*.vert}, \texttt{shaders/*.frag}
+\end{itemize}
+
+\section{Functional Explanation by Module}
+
+\subsection{1) Input, Window, and Frame Loop}
+\texttt{src/main.cpp} is responsible for:
+\begin{itemize}[leftmargin=*]
+    \item Creating the application window and OpenGL context (GLFW).
+    \item Registering input callbacks (mouse, keyboard, scroll, resize).
+    \item Computing frame time and ensuring smooth update/render behavior.
+    \item Calling \texttt{solarSystem.update(deltaTime)} and \texttt{solarSystem.render(...)} each frame.
+\end{itemize}
+
+\subsection{2) Scene Initialization and Rendering Coordination}
+\texttt{src/solar\_system.cpp} is the central orchestrator:
+\begin{itemize}[leftmargin=*]
+    \item Loads all shaders and creates shared geometry objects.
+    \item Builds planets, moons, rings, and orbit render data.
+    \item Applies runtime toggles: pause, orbit visibility, axes/grid visibility, transformation demo.
+    \item Coordinates render order: skybox $\rightarrow$ sun $\rightarrow$ planets/rings $\rightarrow$ helper visuals.
+\end{itemize}
+
+\subsection{3) Planet State, Motion, and Transformations}
+\texttt{src/planet.cpp} handles:
+\begin{itemize}[leftmargin=*]
+    \item Planet properties (radius, orbital radius, spin speed, revolution speed, axial tilt).
+    \item Time-based animation updates for spin and revolution.
+    \item Model matrix construction using translation, rotation, and scaling.
+    \item Additional transformation demo functions: reflection and shear.
+\end{itemize}
+
+\subsection{4) Orbit and Helper Primitive Rendering}
+\texttt{src/orbit\_renderer.cpp} provides:
+\begin{itemize}[leftmargin=*]
+    \item Orbit creation from Midpoint Circle output.
+    \item Axis creation from DDA output.
+    \item Grid creation from Bresenham output.
+    \item Drawing with OpenGL primitives (line loops and points).
+\end{itemize}
+
+\subsection{5) Mesh and Visual Components}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{src/sphere.cpp}: procedural UV sphere mesh for planets/sun.
+    \item \texttt{src/ring.cpp}: ring mesh for Saturn-like ring rendering.
+    \item \texttt{src/skybox.cpp}: star background rendering.
+    \item \texttt{src/shader.cpp}: shader loading, compilation, linking, and uniform utilities.
+\end{itemize}
+
+\section{Criteria Fulfillment (With Where It Is Implemented)}
+
+\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}p{0.12\textwidth}p{0.63\textwidth}@{}}
+\toprule
+\textbf{Required Criterion} & \textbf{Status} & \textbf{Where Fulfilled in Project} \\
+\midrule
+Use of basic graphics primitives (points, lines, polygons, circles) & Fulfilled &
+Points: \texttt{src/orbit\_renderer.cpp} with \texttt{GL\_POINTS} for axes/grid. \\
+& &
+Lines/Circles: \texttt{GL\_LINE\_LOOP} for circular orbits in \texttt{src/orbit\_renderer.cpp}; orbit points generated by Midpoint Circle in \texttt{src/algorithms/midpoint\_circle.cpp}. \\
+& &
+Polygons: triangle meshes via \texttt{glDrawElements(GL\_TRIANGLES,...)} in \texttt{src/sphere.cpp} and \texttt{src/ring.cpp}. \\
+\midrule
+Implementation of at least two graphics algorithms (DDA, Bresenham, Midpoint Circle) & Fulfilled (3/3) &
+DDA implementation: \texttt{src/algorithms/dda.cpp}, used by axis generation in \texttt{OrbitRenderer::generateAxes}. \\
+& &
+Bresenham implementation: \texttt{src/algorithms/bresenham.cpp}, used by grid generation in \texttt{OrbitRenderer::generateGrid}. \\
+& &
+Midpoint Circle implementation: \texttt{src/algorithms/midpoint\_circle.cpp}, used by \texttt{OrbitRenderer::addOrbit}. \\
+\midrule
+Use of 2D transformations (translation, rotation, scaling, reflection, shear) & Fulfilled &
+Translation/Rotation/Scaling are composed in planet model matrices inside \texttt{src/planet.cpp} (orbit placement, axial tilt/spin, radius scaling). \\
+& &
+Reflection and shear are provided in \texttt{Planet::getReflectedModelMatrix} and \texttt{Planet::getShearedModelMatrix}, and visualized in transform demo mode from \texttt{src/solar\_system.cpp}. \\
+\midrule
+Inclusion of at least one moving/animated object & Fulfilled &
+Continuous animation is updated per-frame using \texttt{deltaTime} in \texttt{src/main.cpp} and \texttt{SolarSystem::update}. Planets and moons continuously revolve/spin in \texttt{src/planet.cpp}. \\
+\midrule
+Meaningful real-world themes (scenery, monument, structure, or creative digital art) & Fulfilled &
+Theme is a scientifically meaningful real-world structure: the Solar System (Sun, planets, moons, orbits, textured bodies, sky background), implemented across \texttt{src/solar\_system.cpp}, \texttt{src/planet.cpp}, \texttt{src/skybox.cpp}. \\
+\midrule
+Project must be original and significantly different from weekly lab tasks & Fulfilled (justified) &
+The project integrates multiple advanced components beyond a typical isolated lab: full real-time scene management, camera system, lighting and textures, hierarchical motion (planet-moon), multiple algorithms in one pipeline, interactive controls, and transformation demo features. \\
+\bottomrule
+\end{tabularx}
+
+\section{Technology Overview}
+
+\subsection{Libraries and Tools}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{C++17}: core implementation language.
+    \item \textbf{OpenGL 3.3 Core}: rendering API.
+    \item \textbf{GLFW}: window/context/input management.
+    \item \textbf{GLAD}: OpenGL function loader.
+    \item \textbf{GLM}: vector/matrix math and transformations.
+    \item \textbf{stb\_image}: texture image loading.
+    \item \textbf{CMake}: cross-platform build system.
+\end{itemize}
+
+\subsection{Rendering Stack}
+\begin{itemize}[leftmargin=*]
+    \item Vertex and fragment shaders for planets, sun, rings, skybox, and lines.
+    \item VAO/VBO/EBO pipeline for mesh and helper geometry.
+    \item Depth testing, blending, and perspective projection.
+\end{itemize}
+
+\section{Conclusion}
+
+This project fully satisfies the requested academic criteria and provides a complete, integrated graphics application rather than a single-topic lab exercise. The implementation demonstrates both conceptual graphics knowledge (algorithms and transformations) and practical real-time system integration (render loop, scene architecture, input, animation, and shading).
+
+\end{document}

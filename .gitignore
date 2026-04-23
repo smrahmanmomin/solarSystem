@@ -1,0 +1,10 @@
+build/
+.vscode/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.aps
+*.log
